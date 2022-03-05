@@ -2,9 +2,9 @@ FROM ubuntu
 
 RUN apt update && apt install openssh-server sudo -y
 
-RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 test
+RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1001 Juan
 
-RUN echo "test:1234" | chpasswd
+RUN echo "Juan:1234" | chpasswd
 
 RUN service ssh start
 

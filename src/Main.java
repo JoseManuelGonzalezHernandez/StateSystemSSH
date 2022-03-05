@@ -4,16 +4,36 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
         Session session = null;
         ChannelExec channel = null;
+        Scanner scanner = new Scanner(System.in);
 
+        String destination;
+        String username;
+        String password;
+        int port;
         try {
-            session = new JSch().getSession("test", "127.0.0.1", 22);
-            session.setPassword("1234");
+            System.out.println("Introduce el dominio o la IP de la máquina:");
+            destination = scanner.nextLine(); // IP: "127.0.0.1" Dominio: "localhost"
+
+            System.out.println("Introduce el puerto de la máquina:");
+            port = scanner.nextInt(); // Port: 22 - SSH
+
+            System.out.println("Introduce su usuario:");
+            username = scanner.nextLine(); // Username: "Juan"
+
+            System.out.println("Introduce su contraseña:");
+            password = scanner.nextLine(); // Password: "1234"
+
+            session = new JSch().getSession(username, destination, port);
+            session.setPassword(password);
+
             session.setConfig("StrictHostKeyChecking", "no");
+            
             session.connect();
 
             channel = (ChannelExec) session.openChannel("exec");
@@ -39,6 +59,7 @@ public class Main {
             if (channel != null) {
                 channel.disconnect();
             }
+            scanner.close();
         }
     }
 }
