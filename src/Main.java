@@ -16,6 +16,8 @@ public class Main {
         String username;
         String password;
         int port;
+
+        String logFile;
         try {
             System.out.println("Introduce el dominio o la IP de la máquina:");
             destination = scanner.nextLine(); // IP: "127.0.0.1" Dominio: "localhost"
@@ -24,32 +26,54 @@ public class Main {
             port = scanner.nextInt(); // Port: 22 - SSH
 
             System.out.println("Introduce su usuario:");
-            username = scanner.nextLine(); // Username: "Juan"
+            username = scanner.next(); // Username: "Juan"
 
             System.out.println("Introduce su contraseña:");
-            password = scanner.nextLine(); // Password: "1234"
+            password = scanner.next(); // Password: "1234"
 
             session = new JSch().getSession(username, destination, port);
             session.setPassword(password);
 
             session.setConfig("StrictHostKeyChecking", "no");
-            
+
             session.connect();
 
-            channel = (ChannelExec) session.openChannel("exec");
+            System.out.println("\nINFO: Conexión creada correctamente.\n");
 
-            channel.setCommand("ls -l /");
+            boolean again = true;
+            while (again) {
+                System.out.println("¿Qué archivo de log desea ver? (alternatives.log | bootstrap.log | dpkg.log)");
+                logFile = scanner.next();
 
-            ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
-            channel.setOutputStream(responseStream);
-            channel.connect();
+                if (!logFile.endsWith(".log")) {
+                    System.err.println("ERROR: Los archivos log tienen una extensión \".log\"\n");
+                } else {
+                    channel = (ChannelExec) session.openChannel("exec");
 
-            while (channel.isConnected()) {
-                Thread.sleep(100);
+                    channel.setCommand("cat /var/log/" + logFile);
+
+                    ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+                    channel.setOutputStream(responseStream);
+                    channel.connect();
+
+                    while (channel.isConnected()) {
+                        Thread.sleep(100);
+                    }
+
+                    String responseString = new String(responseStream.toByteArray());
+                    if (responseStream.size() == 0) {
+                        System.err.println("ERROR: No existe ningún archivo de log llamado: " + logFile + "\n");
+                    } else {
+                        System.out.println(responseString);
+                    }
+                }
+                System.out.println("Si desea solicitar el contenido de otro archivo log, introduzca \"other\", en caso contrario, presione la tecla Enter.");
+                scanner.nextLine(); // Scanner buffer reset.
+                if (scanner.nextLine() == "") {
+                    again = false;
+                }
             }
-
-            String responseString = new String(responseStream.toByteArray());
-            System.out.println(responseString);
+            System.out.println("INFO: Conexión finalizada.");
         } catch (JSchException | InterruptedException e) {
             e.printStackTrace();
         } finally {
